@@ -1,0 +1,54 @@
+services:
+  nextjs-app:
+    image: nextjs-debg4-app
+    container_name: nextjs-debg4-app-container
+    build:
+      context: .
+    ports:
+      - "${APP_EXPOSE_PORT}:3000"
+    volumes:
+      - ./src:/app
+      - node_modules:/app/node_modules  # Prevents local node_modules override
+      - build:/app/.next                # Prevents build folder override
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NODE_ENV=development
+    depends_on:
+      - postgres
+    networks:
+      - app_net
+
+  postgres:
+    image: postgres:latest
+    container_name: postgre_db_3061_port
+    ports:
+      - "${DATABASE_EXPOSE_PORT}:5432"
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASS}
+    volumes:
+      - ./assets/db/postgre:/var/lib/postgresql/data
+    networks:
+      - app_net
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    ports:
+      - "${PGADMIN_EXPOSE_PORT}:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    networks:
+      - app_net
+
+networks:
+  app_net:
+    driver: bridge
+
+volumes:
+  node_modules:
+  build:
